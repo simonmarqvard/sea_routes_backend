@@ -1,25 +1,42 @@
 require("dotenv").config();
+
+const cors = require("cors");
 const express = require("express");
+
 const axios = require("axios");
 const app = express();
-const cors = require("cors");
+const db = require("./db");
 const PORT = process.env.PORT || 3000;
 
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 app.use(cors());
 
-//safeguard if no ship-port is sent
+app.get("/dataOptions", (req, res) => {
+  res.json(db);
+});
+
 app.post("/getRoute", async (req, res) => {
-  const { ship, port } = req.body;
+  try {
+    const { ship, port } = req.body;
+    let data = await fetchSeaRouteApi(ship, port);
+    const route = data?.features[0]?.geometry?.coordinates; //Note: seaRoutes data is lng-lat
+    const { distance, duration, departure, arrival } = data?.properties;
 
-  const data = await fetchSeaRouteApi(ship, port);
-  //seaRoutes data is returned as lng-lat
-  const route = data.features[0].geometry.coordinates;
+    const response = {
+      route,
+      routeInfo: {
+        distance,
+        duration,
+        departure,
+        arrival,
+      },
+    };
 
-  res.json(route);
-  //   res.status(200);
+    res.json(response);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "something went wrong" });
+  }
 });
 
 app.listen(PORT, () => {
@@ -32,12 +49,16 @@ const fetchSeaRouteApi = async (ship, port) => {
     "x-api-key": process.env.SEAROUTE_KEY,
   };
 
-  const route = `${ship.lng},${ship.lat};${port.lng},${port.lat}`;
-  const response = await axios.get(
-    `https://api.searoutes.com/route/v2/sea/${route}`,
-    { headers }
-  );
-  const data = response.data;
+  try {
+    const route = `${ship.lng},${ship.lat};${port.lng},${port.lat}`;
+    const response = await axios.get(
+      `https://api.searoutes.com/route/v2/sea/${route}`,
+      { headers }
+    );
+    const data = response.data;
 
-  return data;
+    return data;
+  } catch (err) {
+    throw new Error("something went wrong fetching the searoutes Api");
+  }
 };
