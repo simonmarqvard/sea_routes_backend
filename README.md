@@ -20,7 +20,7 @@ To start the server follow the steps:
 
 1. clone the project
 2. install packages by running "npm- i"
-3. create a .env file in your root folder and copy your searoute key as `SEAROUTE_KEY=your_key` this is necessary to make api requests
-4. start the server using "nodemon server.js" or simply "node server.js"
+3. create a `.env` file in your root folder and copy your searoute key as `SEAROUTE_KEY=your_key` this is necessary to make api requests
+4. start the server using `nodemon server.js` or simply `node server.js`
 
 You are all set to interact with the page
